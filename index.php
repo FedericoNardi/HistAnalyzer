@@ -54,10 +54,10 @@
 		<p>Plotting histogram for </p>
 	</body>
 	<script type="text/javascript">
-		let filename = "<?php echo '$target_file' ?>";
+		let filename = "testdata_head.dat";//"<?php echo $target_file ?>";
 		//console.log(filename);
 	</script>
 	<script src="https://d3js.org/d3.v6.min.js"></script>
 	<div id="my_dataviz">
-		<script src="hist.js"></script> -->
+		<script src="hist.js"></script>
 	</div>
