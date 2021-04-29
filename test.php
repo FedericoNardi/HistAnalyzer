@@ -56,6 +56,7 @@
 		</form>
 	<div style="color:red;">
 	<?php
+		$control = false;
 		if(isset($_FILES['datafile'])){$control = handle_upload($_FILES["datafile"]);}
 		if($control===false){exit("Upload a data file!");}
 	?>
