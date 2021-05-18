@@ -6,7 +6,7 @@ function add_header($filename,$header){
     else{fclose($handle); return true;}
   }
 
-  function handle_upload($file){
+function handle_upload($file){
       $errors= array();
         $file_name = $file['name'];
         $file_size =$file['size'];

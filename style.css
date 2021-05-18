@@ -22,12 +22,20 @@ body{
 	grid-column-start: 2;
 }
 
+#hist_mass{
+  background-color: yellow;
+}
+
 .loader{
 	position: absolute;
 	height: 100%;
 	width: 100%;
 	display: flex;
 	justify-content: center;
+}
+
+.bar-chart {
+  background-color: yellow;
 }
 
 .loader-wrapper {
