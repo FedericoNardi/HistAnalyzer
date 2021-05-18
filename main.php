@@ -51,13 +51,34 @@
   </script>
 
   <div class="wrapper">
-   	<div id="hist_mass"></div>
-   	<div id="hist_v1"></div>
-   	<div id="hist_v2"></div>
-   	<div id="hist_v3"></div>
-   	<div id="hist_v4"></div>
-   	<div id="hist_v5"></div>
-   	<div id="hist_v6"></div>
+    <div>
+   	  <div id="hist_mass"></div>
+      <input type="range" min="1" max="100" value="50" class="slider" id="binMass">
+    </div>
+    <div>
+   	  <div id="hist_v1"></div>
+      <input type="range" min="1" max="100" value="50" class="slider" id="binV1">
+    </div>
+    <div>
+   	  <div id="hist_v2"></div>
+      <input type="range" min="1" max="100" value="50" class="slider" id="binV2">
+    </div>
+    <div>
+   	  <div id="hist_v3"></div>
+      <input type="range" min="1" max="100" value="50" class="slider" id="binV3">
+    </div>
+    <div>
+   	  <div id="hist_v4"></div>
+      <input type="range" min="1" max="100" value="50" class="slider" id="binV4">
+    </div>
+    <div>
+   	  <div id="hist_v5"></div>
+      <input type="range" min="1" max="100" value="50" class="slider" id="binV5">
+    </div>
+    <div>
+   	  <div id="hist_v6"></div>
+      <input type="range" min="1" max="100" value="50" class="slider" id="binV6">
+    </div>
   </div>
 </body>
 </html>

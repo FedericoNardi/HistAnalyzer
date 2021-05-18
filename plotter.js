@@ -200,7 +200,16 @@ Papa.parse( filename, {
     // setting up crossfilter
     const data = crossfilter(parsed.data);
 
-    let massDimension = data.dimension(function(d) {return Math.floor(d.mass/80)*80}),
+    let massSlider = document.getElementById("binMass"),
+      massFactor = 100;
+    massSlider.oninput = function(){
+      massFactor = this.value;
+      console.log(massFactor);
+      react();
+    };
+    console.log(massFactor);
+
+    let massDimension = data.dimension(function(d) {return Math.floor(d.mass/massFactor)*massFactor}),
       massGroup = massDimension.group(),
       v1Dimension = data.dimension(function(d) {return Math.floor(d.v1/50)*50}),
       v1Group = v1Dimension.group(),
