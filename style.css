@@ -18,14 +18,6 @@ body{
 	box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 }
 
-#hist_v6{
-	grid-column-start: 2;
-}
-
-#hist_mass{
-  background-color: yellow;
-}
-
 .loader{
 	position: absolute;
 	height: 100%;
@@ -34,8 +26,34 @@ body{
 	justify-content: center;
 }
 
-.bar-chart {
-  background-color: yellow;
+.slider {
+  -webkit-appearance: none;
+  width: 95%;
+  height: 10px;
+  border-radius: 5px;  
+  background: #aec6d6;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%; 
+  background: #0033A0;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #0033A0;
+  cursor: pointer;
 }
 
 .loader-wrapper {

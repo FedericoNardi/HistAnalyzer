@@ -51,34 +51,35 @@
   </script>
 
   <div class="wrapper">
-    <div>
-   	  <div id="hist_mass"></div>
-      <input type="range" min="1" max="100" value="50" class="slider" id="binMass">
-    </div>
-    <div>
-   	  <div id="hist_v1"></div>
-      <input type="range" min="1" max="100" value="50" class="slider" id="binV1">
-    </div>
-    <div>
-   	  <div id="hist_v2"></div>
-      <input type="range" min="1" max="100" value="50" class="slider" id="binV2">
-    </div>
-    <div>
-   	  <div id="hist_v3"></div>
-      <input type="range" min="1" max="100" value="50" class="slider" id="binV3">
-    </div>
-    <div>
-   	  <div id="hist_v4"></div>
-      <input type="range" min="1" max="100" value="50" class="slider" id="binV4">
-    </div>
-    <div>
-   	  <div id="hist_v5"></div>
-      <input type="range" min="1" max="100" value="50" class="slider" id="binV5">
-    </div>
-    <div>
-   	  <div id="hist_v6"></div>
-      <input type="range" min="1" max="100" value="50" class="slider" id="binV6">
-    </div>
+      <div>
+   	    <div id="hist_mass"></div>
+        <input class="slider" type="range" id="binMass" min=20 max=200 value=100 step=10>
+      </div>
+      <div>
+   	    <div id="hist_v1"></div>
+        <input class="slider" type="range" id="binV1" min=20 max=200 value=100 step=10>
+      </div>
+      <div>
+   	    <div id="hist_v2"></div>
+       <input class="slider" type="range" id="binV2" min=20 max=200 value=100 step=10>
+      </div>
+      <div>
+   	    <div id="hist_v3"></div>
+        <input class="slider" type="range" id="binV3" min=20 max=200 value=100 step=10>
+      </div>
+      <div>
+   	    <div id="hist_v4"></div>
+        <input class="slider" type="range" id="binV4" min=20 max=200 value=100 step=10>
+      </div>
+      <div>
+   	    <div id="hist_v5"></div>
+        <input class="slider" type="range" id="binV5" min=20 max=200 value=100 step=10>
+      </div>
+        <div>
+   	    <div id="hist_v6"></div>
+      <input class="slider" type="range" id="binV6" min=20 max=200 value=100 step=10>
+      </div>
+      <div id="hist_count"></div>
   </div>
 </body>
 </html>
