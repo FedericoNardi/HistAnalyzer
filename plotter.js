@@ -11,8 +11,8 @@ Papa.parse( filename, {
       return rows.map( function(row){ return row[key]; } );
     }
 
-    function getXY(arr){
-      return{ x: unpack(arr, "key"), y: unpack(arr, "value") }
+    function getXY(arr, xKey="key", yKey="value"){
+      return{ x: unpack(arr, xKey), y: unpack(arr, yKey) }
     }
 
     // ---------- Define charts ----------
@@ -49,9 +49,9 @@ Papa.parse( filename, {
     function makeTraces(group, range){
       const traces = [];
       for(const tag of tags){
-        tagDimension.filter(tag);
+        dimensions["tag"].filter(tag);
         traces.push( makeBars(getXY(group.all()), range, in_all, in_here, tag) );
-        tagDimension.filterAll();
+        dimensions["tag"].filterAll();
       }
       return traces;
     }
@@ -59,8 +59,8 @@ Papa.parse( filename, {
     function makeChart(handle, group, range, title, varName) {
       Plotly.react( handle, makeTraces(group, range) , {
         title: title,
-        yaxis: {"title": "count"},
-        xaxis: {"title": varName},
+        yaxis: {title: "count", type:"log"},
+        xaxis: {title: varName},
         selectdirection: "h",
         barmode: "stack",
         hovermode: false,
@@ -71,107 +71,54 @@ Papa.parse( filename, {
     }
 
     function react() {
-      makeChart(hist_mass, massGroup, massRange, "mass", "m");
-      makeChart(hist_v1, v1Group, v1Range, "v1", "v1");
-      makeChart(hist_v2, v2Group, v2Range, "v2", "v2");
-      makeChart(hist_v3, v3Group, v3Range, "v3", "v3");
-      makeChart(hist_v4, v4Group, v4Range, "v4", "v4");
-      makeChart(hist_v5, v5Group, v5Range, "v5", "v5");
-      makeChart(hist_v6, v6Group, v6Range, "v6", "v6");  
-      Plotly.react(hist_count, [{
+      for( key of keys ){
+        if(key!="tag"){ makeChart(hists[key], groups[key], ranges[key], key, key); }
+      }
+      Plotly.react(hists["tag"], [{
         type: 'bar',
-        x: getXY(tagGroup.all()).y,
-        y: getXY(tagGroup.all()).x,
+        x: getXY(groups["tag"].all()).y,
+        y: getXY(groups["tag"].all()).x,
         orientation: 'h'
       }]);
     }
 
-    // Setting up selection listeners
-    function hist_mass_select(e) {
-      massRange = e ? [e.range.x[0], e.range.x[1]] : [-Infinity, Infinity];
-      massDimension.filter(massRange);
-      react();
+    function rejectNullEntries(data){
+      const keys = Object.keys(data[0]);
+        fullKeys = [];
+      keys.forEach( (value,i)=>{
+        if(data[0][value]!="NA") fullKeys.push(value);
+      });
+      return fullKeys;
     }
 
-    function hist_v1_select(e) {
-      v1Range = e ? [e.range.x[0], e.range.x[1]] : [-Infinity, Infinity];
-      v1Dimension.filter(v1Range);
-      react();
-    }
+    // Set up selection listeners
 
-    function hist_v2_select(e) {
-      v2Range = e ? [e.range.x[0], e.range.x[1]] : [-Infinity, Infinity];
-      v2Dimension.filter(v2Range);
-      react();
-    }
 
-    function hist_v3_select(e) {
-      v3Range = e ? [e.range.x[0], e.range.x[1]] : [-Infinity, Infinity];
-      v3Dimension.filter(v3Range);
-      react();
-    }
-
-    function hist_v4_select(e) {
-      v4Range = e ? [e.range.x[0], e.range.x[1]] : [-Infinity, Infinity];
-      v4Dimension.filter(v4Range);
-      react();
-    }
-
-    function hist_v5_select(e) {
-      v5Range = e ? [e.range.x[0], e.range.x[1]] : [-Infinity, Infinity];
-      v5Dimension.filter(v5Range);
-      react();
-    }
-
-    function hist_v6_select(e) {
-      v6Range = e ? [e.range.x[0], e.range.x[1]] : [-Infinity, Infinity];
-      v6Dimension.filter(v6Range);
-      react();
-    }
-
-    window.resetFilters = function() {
-      hist_mass_select();
-      hist_v1_select();
-      hist_v2_select();
-      hist_v3_select();
-      hist_v4_select();
-      hist_v5_select();
-      hist_v6_select();
-    };
+    //window.resetFilters = ()=>{
+    //  for(key of keys){
+    //    if(key!="tag"){ hist_select(which=key); }
+    //  }
+    //}
 
     // -----------------------------------------------------------------
 
     // setting up crossfilter
-    const data = crossfilter(parsed.data);
+    const data = parsed.data;
 
-    let massDimension = data.dimension(function(d) {return Math.floor(d.mass)}),
-      massGroup = massDimension.group( (d)=>{return Math.floor(d/100)*100} ),
-      v1Dimension = data.dimension(function(d) {return Math.floor(d.v1/50)*50}),
-      v1Group = v1Dimension.group(),
-      v2Dimension = data.dimension(function(d) {return Math.floor(d.v2/50)*50}),
-      v2Group = v2Dimension.group(),
-      v3Dimension = data.dimension(function(d) {return Math.floor(d.v3/50)*50}),
-      v3Group = v3Dimension.group(),
-      v4Dimension = data.dimension(function(d) {return Math.floor(d.v4/50)*50}),
-      v4Group = v4Dimension.group(),
-      v5Dimension = data.dimension(function(d) {return Math.floor(d.v5/50)*50}),
-      v5Group = v5Dimension.group(),
-      v6Dimension = data.dimension(function(d) {return Math.floor(d.v6/50)*50}),
-      v6Group = v6Dimension.group(),
-      tagDimension = data.dimension( function(d) {return d.tag}),
-      tagGroup = tagDimension.group().reduceCount();
+    // Find NA entries
+    const keys = rejectNullEntries(data);
 
-    const tags = unpack(tagGroup.all(),"key");
+    // Initializing variables
+    let divs = [],
+      hists = [],
+      consoles = [],
+      sliders = [],
+      groups = [],
+      dimensions = [],
+      ranges = [];
+      wrapper = document.getElementById("plot_wrapper"),
 
-    // Getting DOM objects for renedering
-    const hist_mass = document.getElementById("hist_mass"),
-      hist_v1 = document.getElementById("hist_v1"),
-      hist_v2 = document.getElementById("hist_v2"),
-      hist_v3 = document.getElementById("hist_v3"),
-      hist_v4 = document.getElementById("hist_v4"),
-      hist_v5 = document.getElementById("hist_v5"),
-      hist_v6 = document.getElementById("hist_v6");
-      hist_count = document.getElementById("hist_count");
+      filter = crossfilter(data);
 
     // colors
     let in_all = "#66F",
@@ -179,85 +126,107 @@ Papa.parse( filename, {
         in_here = "#CCC",
         in_there = "#CCF";
 
-    // Initializing ranges anc charts
+    for(key of keys){
+      // Initialize crossfilter groups and dimensions
+      if(key=="tag"){ 
+        dimensions[key] = filter.dimension( (d)=>{ return d[key] } );
+        groups[key] = dimensions[key].group().reduceCount(); 
+      }
+      else{ 
+        dimensions[key] = filter.dimension( (d)=>{ return d[key] } );
+        if(key.includes("eta")){groups[key] = dimensions[key].group( (d)=>{ return Math.floor(d/0.15)*0.15 } ); }
+        else{ groups[key] = dimensions[key].group( (d)=>{ return Math.floor(d/100)*100 } ); }
+        ranges[key] = [-Infinity,Infinity];
+  
+        // Generate DOM slots for plots and consoles
+        divs[key] = document.createElement("div");
+        divs[key].id = "div_"+key;
 
-    let massRange = [-Infinity, Infinity],
-      v1Range = [-Infinity, Infinity],
-      v2Range = [-Infinity, Infinity],
-      v3Range = [-Infinity, Infinity],
-      v4Range = [-Infinity, Infinity],
-      v5Range = [-Infinity, Infinity],
-      v6Range = [-Infinity, Infinity];
+        hists[key] = document.createElement("div");
+        hists[key].id = "hist_"+key;
+        divs[key].appendChild(hists[key]);
+
+        consoles[key] = document.createElement("div");
+        consoles[key].id = "console_"+key;
+        divs[key].appendChild(consoles[key]);
+
+        wrapper.appendChild(divs[key]);
+
+        // Adding sliders to console
+        sliders[key] = document.createElement("input");
+        sliders[key].class = "slider";
+        sliders[key].type = "range";
+        sliders[key].id = "bin_"+key;
+        if(key.includes("eta")){
+          sliders[key].min = 0.05;
+          sliders[key].max = 0.5;
+          sliders[key].step = 0.05;
+          sliders[key].value = 0.1;
+        }
+        else{
+          sliders[key].min = 2;
+          sliders[key].max = 202;
+          sliders[key].step = 10;
+          sliders[key].value = 50;
+        }
+        consoles[key].appendChild(sliders[key]);
+      }
+    }
+
+    // Initializing count chart
+
+    divs["tag"] = document.createElement("div");
+    divs["tag"].id = "div_tag";
+    hists["tag"] = document.createElement("div");
+    hists["tag"].id = "hist_tag";
+    divs["tag"].appendChild(hists["tag"]);
+    wrapper.appendChild(divs["tag"]);
+
+    // Creating charts
+
+    const tags = unpack(groups["tag"].all(),"key");
 
     react();
 
-    // Define actions on charts
-    hist_mass.on('plotly_selected', hist_mass_select);
-    hist_mass.on('plotly_doubleclick', hist_mass_select);
+    // Defining actions on charts and consoles
+    for(key of keys){
+      if(key!="tag"){
+        let input = {k: key}; // Passing extra arguments as object
+        hists[key].on('plotly_selected', function(event,extra=input){
+          ranges[extra.k] = event ? [event.range.x[0],event.range.x[1]] : [-Infinity, Infinity];
+          dimensions[extra.k].filter(ranges[extra.k]);
+          react();
+        });
+        hists[key].on('plotly_doubleclick', function(event,extra=input){
+          ranges[extra.k] = event ? [event.range.x[0],event.range.x[1]] : [-Infinity, Infinity];
+          dimensions[extra.k].filter(ranges[extra.k]);
+          react();
+        });
+      }
+    }
 
-    hist_v1.on('plotly_selected', hist_v1_select);
-    hist_v1.on('plotly_doubleclick', hist_v1_select);
+    console.log(keys);
 
-    hist_v2.on('plotly_selected', hist_v2_select);
-    hist_v2.on('plotly_doubleclick', hist_v2_select);
+    function change_slider(key){
+      let bin = sliders[key].value;
+      console.log(bin);
+      groups[key] = dimensions[key].group( (d)=>{return Math.floor(d/bin)*bin} );
+      makeChart( hists[key],groups[key], ranges[key], key , key );
+    }
 
-    hist_v3.on('plotly_selected', hist_v3_select);
-    hist_v3.on('plotly_doubleclick', hist_v3_select);
+    function handle_sliders(j){
+      return function(event){
+        change_slider(j);
+      }
+    }
 
-    hist_v4.on('plotly_selected', hist_v4_select);
-    hist_v4.on('plotly_doubleclick', hist_v4_select);
+    for(key of keys){
+      console.log(key!="tag");
+      if(key!="tag"){
+        $('#bin_'+key).change( handle_sliders(key) );
+      }
+    }
 
-    hist_v5.on('plotly_selected', hist_v5_select);
-    hist_v5.on('plotly_doubleclick', hist_v5_select);
-
-    hist_v6.on('plotly_selected', hist_v6_select);
-    hist_v6.on('plotly_doubleclick', hist_v6_select);
-
-    $('#binMass').change(()=>{
-      let slider = document.getElementById('binMass');
-      const bin = slider.value;
-      massGroup = massDimension.group( (d)=>{return Math.floor(d/bin)*bin} );
-      makeChart(hist_mass, massGroup, massRange, "mass", "m");
-    })
-    $('#binV1').change(()=>{
-      let slider = document.getElementById('binV1');
-      const bin = slider.value;
-      v1Group = v1Dimension.group( (d)=>{return Math.floor(d/bin)*bin} );
-      makeChart(hist_v1, v1Group, v1Range, "v1", "v1");
-    })
-    $('#binV2').change(()=>{
-      let slider = document.getElementById('binV2');
-      const bin = slider.value;
-      v2Group = v2Dimension.group( (d)=>{return Math.floor(d/bin)*bin} );
-      makeChart(hist_v2, v2Group, v2Range, "v2", "v2");
-    })
-    $('#binV3').change(()=>{
-      let slider = document.getElementById('binV3');
-      const bin = slider.value;
-      v3Group = v3Dimension.group( (d)=>{return Math.floor(d/bin)*bin} );
-      makeChart(hist_v3, v3Group, v3Range, "v3", "v3");
-    })
-    $('#binV4').change(()=>{
-      let slider = document.getElementById('binV4');
-      const bin = slider.value;
-      v4Group = v4Dimension.group( (d)=>{return Math.floor(d/bin)*bin} );
-      makeChart(hist_v4, v4Group, v4Range, "v4", "v4");
-    })
-    $('#binV5').change(()=>{
-      let slider = document.getElementById('binV');
-      const bin = slider.value;
-      v5Group = v5Dimension.group( (d)=>{return Math.floor(d/bin)*bin} );
-      makeChart(hist_v5, v5Group, v5Range, "v5", "v5");
-    })
-    $('#binV6').change(()=>{
-      let slider = document.getElementById('binV6');
-      const bin = slider.value;
-      v6Group = v6Dimension.group( (d)=>{return Math.floor(d/bin)*bin} );
-      makeChart(hist_v6, v6Group, v6Range, "v6", "v6");
-    })
   }
 });
-
-
-
 

@@ -30,8 +30,8 @@ function handle_upload($file){
           echo "Success";
 
           // Adding header
-          $file_content = file_get_contents("uploads/".$file_name);
-          if( strpos($file_content,"mass")<1 ){add_header("uploads/".$file_name,"mass v1 v2 v3 v4 v5 v6 tag");}
+          //$file_content = file_get_contents("uploads/".$file_name);
+          //if( strpos($file_content,"tag")<1 ){add_header("uploads/".$file_name,"tag mll pt1 eta1 pt2 eta2 pt3 eta3 pt4 eta4 met");}
           return true;
         }else{
           print_r($errors);
