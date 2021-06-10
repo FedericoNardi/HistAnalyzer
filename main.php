@@ -37,7 +37,7 @@
     const filename = '<?php echo "uploads/".($_POST["filename"]); ?>';
     console.log(filename);
   </script>
-  <script type="text/javascript" src="plottest.js"></script>
+  <script type="text/javascript" src="plotter.js"></script>
 
   <div class="loader">
     <div class="loader-wrapper">
