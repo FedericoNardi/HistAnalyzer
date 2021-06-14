@@ -13,9 +13,12 @@ body{
 
 .wrapper{
   padding:1%;
-	display: grid;
-	grid-template-columns: 1fr 1fr;
 	box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+}
+
+#plot_wrapper{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }
 
 .loader{
@@ -55,6 +58,8 @@ body{
   background: #0033A0;
   cursor: pointer;
 }
+
+
 
 .loader-wrapper {
   display: inline-block;

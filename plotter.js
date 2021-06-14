@@ -154,19 +154,18 @@ Papa.parse( filename, {
 
         // Adding sliders to console
         sliders[key] = document.createElement("input");
-        sliders[key].class = "slider";
+        sliders[key].setAttribute("class","slider");
         sliders[key].type = "range";
         sliders[key].id = "bin_"+key;
         if(key.includes("eta")){
           sliders[key].min = 0.05;
           sliders[key].max = 0.5;
-          sliders[key].step = 0.05;
           sliders[key].value = 0.1;
+          sliders[key].step = 0.01;
         }
         else{
           sliders[key].min = 2;
-          sliders[key].max = 202;
-          sliders[key].step = 10;
+          sliders[key].max = 200;
           sliders[key].value = 50;
         }
         consoles[key].appendChild(sliders[key]);
@@ -205,11 +204,8 @@ Papa.parse( filename, {
       }
     }
 
-    console.log(keys);
-
     function change_slider(key){
       let bin = sliders[key].value;
-      console.log(bin);
       groups[key] = dimensions[key].group( (d)=>{return Math.floor(d/bin)*bin} );
       makeChart( hists[key],groups[key], ranges[key], key , key );
     }
@@ -221,12 +217,60 @@ Papa.parse( filename, {
     }
 
     for(key of keys){
-      console.log(key!="tag");
       if(key!="tag"){
         $('#bin_'+key).change( handle_sliders(key) );
       }
     }
 
+
+
+    for(const key of keys){
+      if(key!="tag"){
+        const optionX = document.createElement("option");
+        optionX.value = key;
+        optionX.text = key;
+        document.getElementById('selectX').appendChild(optionX);
+      }
+    }
+
+    for(const key of keys){
+      if(key!="tag"){
+        const optionY = document.createElement("option");
+        optionY.value = key;
+        optionY.text = key;
+        document.getElementById('selectY').appendChild(optionY);
+      }
+    }
+
+    function getVars(xKey, yKey){
+      return{ x: unpack(dimensions[xKey].group().top(4), key), y: unpack(dimensions[yKey].group().top(4), key) }
+    }
+
+
+    function make2DPlot(){
+      let selectX = document.getElementById('selectX').value,
+        selectY = document.getElementById('selectY').value,
+        entries = dimensions[selectX].top(Infinity),
+
+        coords = {x: unpack(entries,selectX), y: unpack(entries,selectY)};
+
+      Plotly.react('plot2D',
+        [{
+          x: coords.x,
+          y: coords.y,
+          marker:{size: 2},
+          mode: 'markers',
+          type: 'scatter'
+        }],
+        {
+          hovermode:false,
+          xaxis: {title: selectX},
+          yaxis: {title: selectY}
+        });
+    }
+
+    let button = document.getElementById('make2DPlot');
+    button.onclick = make2DPlot;
   }
 });
 

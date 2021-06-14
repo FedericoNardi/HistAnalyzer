@@ -35,7 +35,6 @@
 
   <script type="text/javascript">
     const filename = '<?php echo "uploads/".($_POST["filename"]); ?>';
-    console.log(filename);
   </script>
   <script type="text/javascript" src="plotter.js"></script>
 
@@ -53,7 +52,13 @@
     });
   </script>
 
-  <div class="wrapper" id="plot_wrapper"> 
+  <div class="wrapper" id="plot_wrapper"></div>
+  </br>
+  <div class="wrapper" id="select_wrapper">
+    <select id="selectX"></select>
+    <select id="selectY"></select>
+    <button id="make2DPlot">Show</button>
+    <div id="plot2D"></div>
   </div>
   
 </body>
