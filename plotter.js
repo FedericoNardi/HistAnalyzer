@@ -12,7 +12,7 @@ Papa.parse( filename, {
     }
 
     function getXY(arr, xKey="key", yKey="value"){
-      return{ x: unpack(arr, xKey), y: unpack(arr, yKey) }
+      return{ x: unpack(arr, xKey), y: unpack(arr, yKey) };
     }
 
     // ---------- Define charts ----------
@@ -113,9 +113,13 @@ Papa.parse( filename, {
       hists = [],
       consoles = [],
       sliders = [],
+      buttons = [],
+      fit_logs = [],
+
       groups = [],
       dimensions = [],
       ranges = [];
+
       wrapper = document.getElementById("plot_wrapper"),
 
       filter = crossfilter(data);
@@ -152,7 +156,7 @@ Papa.parse( filename, {
 
         wrapper.appendChild(divs[key]);
 
-        // Adding sliders to console
+        // Adding sliders and buttons to console
         sliders[key] = document.createElement("input");
         sliders[key].setAttribute("class","slider");
         sliders[key].type = "range";
@@ -160,7 +164,7 @@ Papa.parse( filename, {
         if(key.includes("eta")){
           sliders[key].min = 0.05;
           sliders[key].max = 0.5;
-          sliders[key].value = 0.1;
+          sliders[key].value = 0.15;
           sliders[key].step = 0.01;
         }
         else{
@@ -169,6 +173,16 @@ Papa.parse( filename, {
           sliders[key].value = 50;
         }
         consoles[key].appendChild(sliders[key]);
+        consoles[key].appendChild(document.createElement('br'));
+
+        buttons[key] = document.createElement("button");
+        buttons[key].textContent = "Fit";
+        buttons[key].setAttribute("id","fit_"+key);
+
+        fit_logs[key] = document.createElement("div");
+
+        consoles[key].appendChild(buttons[key]);
+        consoles[key].appendChild(fit_logs[key]);
       }
     }
 
@@ -187,7 +201,7 @@ Papa.parse( filename, {
 
     react();
 
-    // Defining actions on charts and consoles
+    // Defining actions on charts
     for(key of keys){
       if(key!="tag"){
         let input = {k: key}; // Passing extra arguments as object
@@ -210,17 +224,91 @@ Papa.parse( filename, {
       makeChart( hists[key],groups[key], ranges[key], key , key );
     }
 
+    function initFit(arr, xKey="key", yKey="value"){
+      let vals = [],
+        x = unpack(arr,xKey),
+        y = unpack(arr,yKey);
+
+      for(let i=0; i<x.length; i++){
+        vals.push([x[i], Math.log(y[i])]);
+      }
+
+      return vals;
+    }
+
+    function gauss_fit(key){
+      // filter data to match ranges
+      let tmp = initFit(groups[key].all());
+      let entries = [];
+      
+      for(let i=0; i<tmp.length; i++){
+        if(tmp[i][0]>ranges[key][0]&&tmp[i][0]<ranges[key][1]){entries.push(tmp[i])} ;
+      }
+      delete tmp;
+
+      const result = regression.polynomial(entries,{order:2, precision:10});
+
+      const fit_traces = [];
+      for(const tag of tags){
+        dimensions["tag"].filter(tag);
+        fit_traces.push( makeBars(getXY(groups[key].all()), ranges[key], in_all, in_here, tag) );
+        dimensions["tag"].filterAll();
+      }
+      let fit_x = [],
+        fit_y = [];
+
+      for(let i=0; i<result.points.length; i++){
+        fit_x.push(result.points[i][0]);
+        fit_y.push(Math.exp(result.points[i][1]));
+      }
+
+      fit_traces.push({
+        type: 'scatter',
+        mode: 'marker+lines',
+        x: fit_x,
+        y: fit_y,
+        name: "fit"
+      });
+
+      Plotly.react( "hist_"+key, fit_traces , {
+        title: key,
+        yaxis: {title: "count", type:"log"},
+        xaxis: {title: key},
+        selectdirection: "h",
+        barmode: "stack",
+        hovermode: false,
+        showlegend: true,
+        dragmode: "select",
+        shapes: makeShapes(ranges[key])
+      });
+
+      fit_logs[key].innerHTML = 
+        "<b>Range:</b> ["+String(ranges[key][0])+" , "+String(ranges[key][1])+"] <br>"
+        +"<b>Mean:</b> "+String(-result.equation[1]/(2*result.equation[0]))+"<br>"
+        +"<b>Variance:</b> "+String(Math.sqrt(-1/result.equation[0]))+"<br>"
+        +"<b>R^2:</b> "+String(-result.r2)+"<br>";
+    }
+
     function handle_sliders(j){
       return function(event){
         change_slider(j);
       }
     }
 
+    function handle_fit(j){
+      return function(event){
+        gauss_fit(j);
+      }
+    }
+
     for(key of keys){
       if(key!="tag"){
         $('#bin_'+key).change( handle_sliders(key) );
+        $('#fit_'+key).click( handle_fit(key) );
       }
     }
+
+
 
 
 
@@ -241,11 +329,6 @@ Papa.parse( filename, {
         document.getElementById('selectY').appendChild(optionY);
       }
     }
-
-    function getVars(xKey, yKey){
-      return{ x: unpack(dimensions[xKey].group().top(4), key), y: unpack(dimensions[yKey].group().top(4), key) }
-    }
-
 
     function make2DPlot(){
       let selectX = document.getElementById('selectX').value,
