@@ -7,6 +7,10 @@ body{
 	padding: 1%;
 }
 
+.upload{
+  padding: 1%;
+}
+
 .error{
 	color: red;
 }
