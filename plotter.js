@@ -27,7 +27,7 @@ Papa.parse( filename, {
             return (range[0] < x && x < range[1]) ? 1.0 : 0.5;
           })
         },
-        name: tag
+        name: textEncoder(tag)
       }
     }
 
@@ -58,9 +58,9 @@ Papa.parse( filename, {
 
     function makeChart(handle, group, range, title, varName) {
       Plotly.react( handle, makeTraces(group, range) , {
-        title: title,
+        title: '',
         yaxis: {title: "count", type:"log"},
-        xaxis: {title: varName},
+        xaxis: {title: textEncoder(varName,1)},
         selectdirection: "h",
         barmode: "stack",
         hovermode: false,
@@ -99,6 +99,39 @@ Papa.parse( filename, {
     //    if(key!="tag"){ hist_select(which=key); }
     //  }
     //}
+
+    function textEncoder(textIn, units=0){
+      switch(textIn){
+        case "g":
+          return '&#947;';
+        case "m":
+          return '&mu;';
+        case '4mm':
+          return '4 &mu;';
+        case '4ee':
+          return '4 e';
+        case '4me':
+          return '4 &#947;e';
+        case 'mll':
+          if(units==1){return 'invariant mass [GeV]';}
+          else{ return 'invariant mass'}; 
+        case 'met':
+          if(units==1){return 'missing transverse energy [GeV]';}
+          else{ return 'missing transverse energy'}; 
+        case 'pt1':
+          if(units==1){return 'p<sub>T</sup><sup>1</sup> [GeV/c]';}
+          else{ return 'p<sub>T</sup><sup>1</sup>'};
+        case 'pt2':
+          if(units==1){return 'p<sub>T</sup><sup>2</sup> [GeV/c]';}
+          else{ return 'p<sub>2</sup><sup>1</sup>'};
+        case 'eta1':
+          return '&#951;<sub>1</sub>';
+        case 'eta2':
+          return '&#951;<sub>2</sub>';
+        default: 
+          return textIn;
+      }
+    }
 
     // -----------------------------------------------------------------
 
@@ -164,7 +197,7 @@ Papa.parse( filename, {
         if(key.includes("eta")){
           sliders[key].min = 0.05;
           sliders[key].max = 0.5;
-          sliders[key].value = 0.15;
+          sliders[key].setAttribute("value",0.15);
           sliders[key].step = 0.01;
         }
         else{
@@ -289,6 +322,10 @@ Papa.parse( filename, {
         +"<b>R^2:</b> "+String(-result.r2)+"<br>";
     }
 
+    function refresh_scale(key){
+      console.log(scaleChecks[key].checked);
+    }
+
     function handle_sliders(j){
       return function(event){
         change_slider(j);
@@ -301,16 +338,18 @@ Papa.parse( filename, {
       }
     }
 
+    function handle_switch(j){
+      return function(event){
+        refresh_scale(j);
+      }
+    }
+
     for(key of keys){
       if(key!="tag"){
         $('#bin_'+key).change( handle_sliders(key) );
         $('#fit_'+key).click( handle_fit(key) );
       }
     }
-
-
-
-
 
     for(const key of keys){
       if(key!="tag"){
@@ -347,8 +386,8 @@ Papa.parse( filename, {
         }],
         {
           hovermode:false,
-          xaxis: {title: selectX},
-          yaxis: {title: selectY}
+          xaxis: {title: textEncoder(selectX,1)},
+          yaxis: {title: textEncoder(selectY,1)}
         });
     }
 
