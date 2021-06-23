@@ -146,12 +146,16 @@ Papa.parse( filename, {
       hists = [],
       consoles = [],
       sliders = [],
+      slideRanges = [],
+      slideValues = [],
       buttons = [],
       fit_logs = [],
 
       groups = [],
       dimensions = [],
-      ranges = [];
+      ranges = [],
+
+      binLabels = [],
 
       wrapper = document.getElementById("plot_wrapper"),
 
@@ -189,30 +193,43 @@ Papa.parse( filename, {
 
         wrapper.appendChild(divs[key]);
 
-        // Adding sliders and buttons to console
-        sliders[key] = document.createElement("input");
-        sliders[key].setAttribute("class","slider");
-        sliders[key].type = "range";
-        sliders[key].id = "bin_"+key;
+        // Adding slideRanges and buttons to console
+        sliders[key] = document.createElement('div');
+        sliders[key].setAttribute('class','slider');
+
+        slideRanges[key] = document.createElement("input");
+        slideRanges[key].setAttribute("class","slider-range");
+        slideRanges[key].type = "range";
+        slideRanges[key].id = "bin_"+key;
         if(key.includes("eta")){
-          sliders[key].min = 0.05;
-          sliders[key].max = 0.5;
-          sliders[key].setAttribute("value",0.15);
-          sliders[key].step = 0.01;
+          slideRanges[key].step = 0.01;
+          slideRanges[key].min = 0.05;
+          slideRanges[key].max = 0.5;
+          slideRanges[key].value = 0.15;
         }
         else{
-          sliders[key].min = 2;
-          sliders[key].max = 200;
-          sliders[key].value = 50;
+          slideRanges[key].min = 2;
+          slideRanges[key].max = 200;
+          slideRanges[key].value = 50;
         }
+        slideValues[key] = document.createElement('span');
+        slideValues[key].setAttribute('class','slider-value');
+        slideValues[key].innerHTML = slideRanges[key].value;
+
         consoles[key].appendChild(sliders[key]);
-        consoles[key].appendChild(document.createElement('br'));
+        binLabels[key] = document.createElement('span');
+        binLabels[key].innerHTML = "Bin size: ";
+        binLabels[key].setAttribute('class','bin-label');
+        sliders[key].appendChild(binLabels[key]);
+        sliders[key].appendChild(slideRanges[key]);
+        sliders[key].appendChild(slideValues[key]);
 
         buttons[key] = document.createElement("button");
         buttons[key].textContent = "Fit";
         buttons[key].setAttribute("id","fit_"+key);
 
         fit_logs[key] = document.createElement("div");
+        fit_logs[key].setAttribute("class","fit-log");
 
         consoles[key].appendChild(buttons[key]);
         consoles[key].appendChild(fit_logs[key]);
@@ -252,7 +269,8 @@ Papa.parse( filename, {
     }
 
     function change_slider(key){
-      let bin = sliders[key].value;
+      let bin = slideRanges[key].value;
+      slideValues[key].innerHTML = String(bin);
       groups[key] = dimensions[key].group( (d)=>{return Math.floor(d/bin)*bin} );
       makeChart( hists[key],groups[key], ranges[key], key , key );
     }
