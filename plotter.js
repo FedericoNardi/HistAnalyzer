@@ -274,7 +274,7 @@ Papa.parse( filename, {
 
         consoles[key].appendChild(buttons[key]);
         switchText[key] = document.createElement("span");
-        switchText[key].setAttribute("class","switch-label");
+        switchText[key].setAttribute("class", 'switchLabel');
         switchText[key].innerHTML = "<b>y-axis scale: </b>";
         consoles[key].appendChild(switchText[key]);
         consoles[key].appendChild(switchContainers[key]);

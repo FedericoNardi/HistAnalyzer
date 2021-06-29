@@ -82,14 +82,14 @@ body{
 }
 
 /* The switch - the box around the slider */
+.switchLabel {
+  position: relative;
+  left:  55%;
+}
+
 .switch-container{
   position: relative;
   left:  56%;
-}
-
-.switch-label:{
-  position: relative;
-  left:  55%;
 }
 
 .switch {
