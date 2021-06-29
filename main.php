@@ -13,12 +13,10 @@
 <body>
 
   <div class="upload">
-    <h1 class="h1">File uploader</h1>
-    <p>Upload data file</p>
-  </div>
+    <h1 class="stdtext">File uploader</h1>
+    <div class="stdtext">Upload data file</div>
 
-  <div class="upload">
-    <form method="post" enctype="multipart/form-data">
+    <form class="stdtext" method="post" enctype="multipart/form-data">
       <input type="file" name="datafile" id="input">
       <input type="submit" value="Upload">
     </form>

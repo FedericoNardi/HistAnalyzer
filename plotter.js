@@ -24,7 +24,7 @@ Papa.parse( filename, {
         y: coords.y,
         marker: {
           opacity: coords.x.map( function(x) {
-            return (range[0] < x && x < range[1]) ? 1.0 : 0.5;
+            return (range[0] <= x && x < range[1]) ? 1.0 : 0.5;
           })
         },
         name: textEncoder(tag)
@@ -46,6 +46,16 @@ Papa.parse( filename, {
       }]
     }
 
+    function lastBin(array){
+      let i=array.length-1,
+        sum = 0;
+      while(sum==0){
+        sum += array[i];
+        i--;
+      }
+      return i+1;
+    }
+
     function makeTraces(group, range){
       const traces = [];
       for(const tag of tags){
@@ -59,8 +69,8 @@ Papa.parse( filename, {
     function makeChart(handle, group, range, title, varName) {
       Plotly.react( handle, makeTraces(group, range) , {
         title: '',
-        yaxis: {title: "count", type:"log"},
-        xaxis: {title: textEncoder(varName,1)},
+        yaxis: {title: "count", type: checkboxes[varName].checked?"log":"lin"},
+        xaxis: {title: textEncoder(varName,1), range: [0.-0.5*slideRanges[varName].value, getXY(group.all()).x[lastBin(getXY(group.all()).y)+1] ]},
         selectdirection: "h",
         barmode: "stack",
         hovermode: false,
@@ -74,10 +84,15 @@ Papa.parse( filename, {
       for( key of keys ){
         if(key!="tag"){ makeChart(hists[key], groups[key], ranges[key], key, key); }
       }
+      let yTicks = [];
+      for(tick of getXY(groups["tag"].all()).x){
+        yTicks.push(textEncoder(tick));
+      }
+
       Plotly.react(hists["tag"], [{
         type: 'bar',
         x: getXY(groups["tag"].all()).y,
-        y: getXY(groups["tag"].all()).x,
+        y: getXY(groups["tag"].all()).x.map(textEncoder),
         orientation: 'h'
       }]);
     }
@@ -93,14 +108,7 @@ Papa.parse( filename, {
 
     // Set up selection listeners
 
-
-    //window.resetFilters = ()=>{
-    //  for(key of keys){
-    //    if(key!="tag"){ hist_select(which=key); }
-    //  }
-    //}
-
-    function textEncoder(textIn, units=0){
+    function textEncoder(textIn, units=0, select=0){
       switch(textIn){
         case "g":
           return '&#947;';
@@ -142,12 +150,23 @@ Papa.parse( filename, {
     const keys = rejectNullEntries(data);
 
     // Initializing variables
+
     let divs = [],
       hists = [],
       consoles = [],
+
       sliders = [],
       slideRanges = [],
       slideValues = [],
+
+      switchContainers = [],
+      switchTextA = [],
+      switchTextB = [],
+      switchText = [],
+      switchLabels = [],
+      checkboxes = [],
+      switchSliders = [],
+
       buttons = [],
       fit_logs = [],
 
@@ -177,7 +196,7 @@ Papa.parse( filename, {
         dimensions[key] = filter.dimension( (d)=>{ return d[key] } );
         if(key.includes("eta")){groups[key] = dimensions[key].group( (d)=>{ return Math.floor(d/0.15)*0.15 } ); }
         else{ groups[key] = dimensions[key].group( (d)=>{ return Math.floor(d/100)*100 } ); }
-        ranges[key] = [-Infinity,Infinity];
+        ranges[key] = [0,Infinity];
   
         // Generate DOM slots for plots and consoles
         divs[key] = document.createElement("div");
@@ -218,7 +237,7 @@ Papa.parse( filename, {
 
         consoles[key].appendChild(sliders[key]);
         binLabels[key] = document.createElement('span');
-        binLabels[key].innerHTML = "Bin size: ";
+        binLabels[key].innerHTML = "<b>Bin size:</b> ";
         binLabels[key].setAttribute('class','bin-label');
         sliders[key].appendChild(binLabels[key]);
         sliders[key].appendChild(slideRanges[key]);
@@ -228,10 +247,37 @@ Papa.parse( filename, {
         buttons[key].textContent = "Fit";
         buttons[key].setAttribute("id","fit_"+key);
 
+        switchContainers[key] = document.createElement("span");
+        switchContainers[key].setAttribute("class","switch-container");
+        switchLabels[key] = document.createElement("label");
+        switchLabels[key].setAttribute("class","switch");
+        checkboxes[key] = document.createElement("input");
+        checkboxes[key].setAttribute("type","checkbox");
+        checkboxes[key].setAttribute("id","scale_"+key);
+        switchSliders[key] = document.createElement("span");
+        switchSliders[key].setAttribute("class","switch-slider round");
+        switchLabels[key].appendChild(checkboxes[key]);
+        switchLabels[key].appendChild(switchSliders[key]);
+
+        switchTextA[key] = document.createElement("span");
+        switchTextA[key].innerHTML = "LIN ";
+        switchTextB[key] = document.createElement("span");
+        switchTextB[key].innerHTML = " LOG";
+        switchContainers[key].appendChild(switchTextA[key]);
+        switchContainers[key].appendChild(switchLabels[key]);
+        switchContainers[key].appendChild(switchTextB[key]);
+
+
+
         fit_logs[key] = document.createElement("div");
         fit_logs[key].setAttribute("class","fit-log");
 
         consoles[key].appendChild(buttons[key]);
+        switchText[key] = document.createElement("span");
+        switchText[key].setAttribute("class","switch-label");
+        switchText[key].innerHTML = "<b>y-axis scale: </b>";
+        consoles[key].appendChild(switchText[key]);
+        consoles[key].appendChild(switchContainers[key]);
         consoles[key].appendChild(fit_logs[key]);
       }
     }
@@ -256,12 +302,12 @@ Papa.parse( filename, {
       if(key!="tag"){
         let input = {k: key}; // Passing extra arguments as object
         hists[key].on('plotly_selected', function(event,extra=input){
-          ranges[extra.k] = event ? [event.range.x[0],event.range.x[1]] : [-Infinity, Infinity];
+          ranges[extra.k] = event ? [(event.range.x[0]<0 ? 0 : event.range.x[0]),event.range.x[1]] : [0, Infinity];
           dimensions[extra.k].filter(ranges[extra.k]);
           react();
         });
         hists[key].on('plotly_doubleclick', function(event,extra=input){
-          ranges[extra.k] = event ? [event.range.x[0],event.range.x[1]] : [-Infinity, Infinity];
+          ranges[extra.k] = event ? [event.range.x[0],event.range.x[1]] : [0, Infinity];
           dimensions[extra.k].filter(ranges[extra.k]);
           react();
         });
@@ -272,7 +318,7 @@ Papa.parse( filename, {
       let bin = slideRanges[key].value;
       slideValues[key].innerHTML = String(bin);
       groups[key] = dimensions[key].group( (d)=>{return Math.floor(d/bin)*bin} );
-      makeChart( hists[key],groups[key], ranges[key], key , key );
+      makeChart( hists[key], groups[key], ranges[key], key , key );
     }
 
     function initFit(arr, xKey="key", yKey="value"){
@@ -293,11 +339,11 @@ Papa.parse( filename, {
       let entries = [];
       
       for(let i=0; i<tmp.length; i++){
-        if(tmp[i][0]>ranges[key][0]&&tmp[i][0]<ranges[key][1]){entries.push(tmp[i])} ;
+        if( tmp[i][0]>ranges[key][0] && tmp[i][0]<ranges[key][1] ){entries.push(tmp[i])} ;
       }
       delete tmp;
 
-      const result = regression.polynomial(entries,{order:2, precision:10});
+      const result = regression.polynomial(entries,{order:2, precision:8});
 
       const fit_traces = [];
       for(const tag of tags){
@@ -323,8 +369,8 @@ Papa.parse( filename, {
 
       Plotly.react( "hist_"+key, fit_traces , {
         title: key,
-        yaxis: {title: "count", type:"log"},
-        xaxis: {title: key},
+        yaxis: {title: "count", type:checkboxes[key].checked?"log":"lin"},
+        xaxis: {title: key, range: [0.-0.5*slideRanges[key].value, getXY(groups[key].all()).x[lastBin(getXY(groups[key].all()).y)+1] ]},
         selectdirection: "h",
         barmode: "stack",
         hovermode: false,
@@ -334,14 +380,11 @@ Papa.parse( filename, {
       });
 
       fit_logs[key].innerHTML = 
-        "<b>Range:</b> ["+String(ranges[key][0])+" , "+String(ranges[key][1])+"] <br>"
+        "<b>Fit Results:</b><br>"
+        +"<b>Range:</b> ["+String(ranges[key][0])+" , "+String(ranges[key][1])+"] <br>"
         +"<b>Mean:</b> "+String(-result.equation[1]/(2*result.equation[0]))+"<br>"
         +"<b>Variance:</b> "+String(Math.sqrt(-1/result.equation[0]))+"<br>"
         +"<b>R^2:</b> "+String(-result.r2)+"<br>";
-    }
-
-    function refresh_scale(key){
-      console.log(scaleChecks[key].checked);
     }
 
     function handle_sliders(j){
@@ -362,10 +405,14 @@ Papa.parse( filename, {
       }
     }
 
+    function refresh_scale(key){
+      makeChart( hists[key], groups[key], ranges[key], key , key );    }
+
     for(key of keys){
       if(key!="tag"){
         $('#bin_'+key).change( handle_sliders(key) );
         $('#fit_'+key).click( handle_fit(key) );
+        $('#scale_'+key).change( handle_switch(key) );
       }
     }
 
